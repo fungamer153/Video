@@ -1,6 +1,9 @@
 # Project place file
 /Video.rbxlx
 
+/Packages
+/ServerPackages
+
 # Roblox Studio lock files
 /*.rbxlx.lock
 /*.rbxl.lock
