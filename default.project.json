@@ -1,0 +1,113 @@
+{
+  "name": "Video",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/Shared"
+      },
+
+      "DevPackages": {
+        "$path": "src/DevPackages"
+      },
+
+      "Packages": {
+        "$path": "Packages"
+      },
+
+      "Stories": {
+        "$path": "src/Stories"
+      }
+    },
+
+     "ServerScriptService": {
+      "$className": "ServerScriptService",
+
+      "Runtime": {
+        "$path": "src/Runtime/Runtime.server.luau",
+        "Startup": {
+          "$path": "src/Runtime/Startup.luau"
+        }
+      },
+
+      "Server": {
+        "$path": "src/Server"
+      },
+
+      "ServerPackages": {
+        "$path": "ServerPackages"
+      }
+    },
+
+     "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "AutoJumpEnabled": false,
+        "CameraMaxZoomDistance": 128,
+        "CharacterUseJumpPower": false,
+        "EnableMouseLockOption": false,
+        "HealthDisplayDistance": 0,
+        "NameDisplayDistance": 0,
+        "UserEmotesEnabled": false
+      },
+      
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+       
+        "Runtime": {
+          "$path": "src/Runtime/Runtime.client.luau",
+          "Startup": {
+            "$path": "src/Runtime/Startup.luau"
+          }
+        }
+      }
+    },
+
+    "Workspace": {
+      "$properties": {
+        "FilteringEnabled": true
+      },
+      "Baseplate": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Color": [
+            0.38823,
+            0.37254,
+            0.38823
+          ],
+          "Locked": true,
+          "Position": [
+            0,
+            -10,
+            0
+          ],
+          "Size": [
+            512,
+            20,
+            512
+          ]
+        }
+      }
+    },
+    "Lighting": {
+      "$properties": {
+        "Ambient": [
+          0,
+          0,
+          0
+        ],
+        "Brightness": 2,
+        "GlobalShadows": true,
+        "Outlines": false,
+        "Technology": "Voxel"
+      }
+    },
+    "SoundService": {
+      "$properties": {
+        "RespectFilteringEnabled": true
+      }
+    }
+  }
+}
