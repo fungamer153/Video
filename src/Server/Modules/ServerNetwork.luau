@@ -126,6 +126,9 @@ if not RunService:IsRunning() then
 			fireList = noop,
 			fireSet = noop
 		}),
+		ChangeChannelName = table.freeze({
+			setCallback = noop
+		}),
 	}) :: Events
 end
 local Players = game:GetService("Players")
@@ -180,6 +183,47 @@ end
 
 RunService.Heartbeat:Connect(sendEvents)
 
+local reliable_events = table.create(1)
+reliable.OnServerEvent:Connect(function(player, buff, inst)
+	incoming_buff = buff
+	incoming_inst = inst
+	incoming_read = 0
+	incoming_ipos = 0
+	local len = buffer.len(buff)
+	while incoming_read < len do
+		local id = buffer.readu8(buff, read(1))
+		if id == 0 then
+			local call_id = buffer.readu8(buff, read(1))
+			local value
+			local len_1 = buffer.readu16(incoming_buff, read(2))
+			value = buffer.readstring(incoming_buff, read(len_1), len_1)
+			assert(utf8.len(value) ~= nil, "value is not valid utf-8")
+			if reliable_events[0] then
+				task.spawn(function(player_2, call_id_2, value_1)
+					local ret_1 = reliable_events[0](player_2, value_1)
+					load_player(player_2)
+					alloc(1)
+					buffer.writeu8(outgoing_buff, outgoing_apos, 1)
+					alloc(1)
+					buffer.writeu8(outgoing_buff, outgoing_apos, call_id_2)
+					local bool_1 = 0
+					local bool_1_pos_1 = alloc(1)
+					if ret_1 == "Success" then
+						bool_1 = bit32.bor(bool_1, 0b0000000000000001)
+					elseif ret_1 == "Fail" then
+						local _
+					else
+						error("Invalid enumerator")
+					end
+					buffer.writeu8(outgoing_buff, bool_1_pos_1, bool_1)
+					player_map[player_2] = save()
+				end, player, call_id, value)
+			end
+		else
+			error("Unknown event id")
+		end
+	end
+end)
 table.freeze(polling_queues_reliable)
 table.freeze(polling_queues_unreliable)
 
@@ -244,6 +288,14 @@ local returns = {
 				buffer.copy(outgoing_buff, outgoing_apos, buff, 0, used)
 				table.move(inst, 1, #inst, #outgoing_inst + 1, outgoing_inst)
 				player_map[player] = save()
+			end
+		end,
+	},
+	ChangeChannelName = {
+		setCallback = function(callback: (player: Player, text: (string)) -> (("Success" | "Fail"))): () -> ()
+			reliable_events[0] = callback
+			return function()
+				reliable_events[0] = nil
 			end
 		end,
 	},

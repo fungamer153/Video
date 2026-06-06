@@ -5,10 +5,13 @@ local Charm = require(ReplicatedStorage.Packages.Charm)
 local ServerEvents = require(ServerScriptService.Server.Modules.ServerEvents)
 local DataService = require(ServerScriptService.Server.Services.DataService)
 
+local ProfileTemplate = require(ServerScriptService.Server.Modules.ProfileTemplate)
+
 local playerAtoms: { [Player]: { [string]: any } } = {}
 
 local function createProfileAtoms(profileData: { [string]: any }): { [string]: any }
 	return {
+		tutorialComplete = Charm.atom(profileData.tutorialComplete),
 		videoProgress = Charm.atom(profileData.videoProgress),
 		viewers = Charm.atom(profileData.viewers),
 		subscribers = Charm.atom(profileData.subscribers),
@@ -19,12 +22,18 @@ end
 
 local function requireAtoms(player: Player): { [string]: any }
 	local atoms = playerAtoms[player]
-	assert(atoms, "[ProfileService] No profile loaded for player: " .. player.Name)
+	assert(atoms, "No profile loaded for player: " .. player.Name)
 	return atoms
 end
 
-local function commitField(player: Player, field: string, value: any)
-	DataService.update(player, function(profileData: { [string]: any })
+local function commitField(player, field, value)
+	DataService.update(player, function(profileData)
+		for k, v in ProfileTemplate.template do
+			if profileData[k] == nil then
+				profileData[k] = v
+			end
+		end
+
 		profileData[field] = value
 		return true
 	end)
@@ -58,14 +67,14 @@ end
 -- Returns the current value of a profile field atom
 function ProfileService.get(player: Player, field: string): any
 	local atoms = requireAtoms(player)
-	assert(atoms[field], "[ProfileService] Unknown field: " .. tostring(field))
+	assert(atoms[field], "Unknown field: " .. tostring(field))
 	return atoms[field]()
 end
 
 -- Subscribe to live changes on a profile field; returns a cleanup function
 function ProfileService.observe(player: Player, field: string, callback: (newValue: any, oldValue: any) -> ()): () -> ()
 	local atoms = requireAtoms(player)
-	assert(atoms[field], "[ProfileService] Unknown field: " .. tostring(field))
+	assert(atoms[field], "Unknown field: " .. tostring(field))
 	return Charm.observe(atoms[field], callback)
 end
 
