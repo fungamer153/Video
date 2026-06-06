@@ -22,7 +22,7 @@ type LoaderOptions = {
 }
 
 local Concur = require(ReplicatedStorage.Packages.Concur)
-local Loader = require(ReplicatedStorage.Common.Loader)
+local Loader = require(ReplicatedStorage.Shared.Loader)
 local TableUtil = require(ReplicatedStorage.Packages.TableUtil)
 
 return function(folder: Folder, matchName: string, options: LoaderOptions?)
