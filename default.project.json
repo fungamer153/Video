@@ -4,12 +4,12 @@
     "$className": "DataModel",
 
     "ReplicatedStorage": {
-      "Shared": {
-        "$path": "src/Shared"
+      "Client": {
+        "$path": "src/Client"
       },
 
-      "DevPackages": {
-        "$path": "src/DevPackages"
+      "Shared": {
+        "$path": "src/Shared"
       },
 
       "Packages": {
@@ -67,28 +67,6 @@
     "Workspace": {
       "$properties": {
         "FilteringEnabled": true
-      },
-      "Baseplate": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Color": [
-            0.38823,
-            0.37254,
-            0.38823
-          ],
-          "Locked": true,
-          "Position": [
-            0,
-            -10,
-            0
-          ],
-          "Size": [
-            512,
-            20,
-            512
-          ]
-        }
       }
     },
     "Lighting": {

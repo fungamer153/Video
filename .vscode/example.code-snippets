@@ -1,0 +1,180 @@
+{
+    // Place your snippets for luau here. Each snippet is defined under a snippet name and has a prefix, body and 
+    // description. The prefix is what is used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+    // $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. Placeholders with the 
+    // same ids are connected.
+    // Example:
+    "Create controller": {
+        "prefix": "-controller",
+        "body": [
+            "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+            "local TypeDefinitions = require(ReplicatedStorage.Common.TypeDefinitions) :: any",
+            "",
+            "local MyController = {} :: Controller & {",
+            "\texampleMethod: () -> ()",
+            "}",
+            "",
+            "function MyController.onStart()",
+            "\t",
+            "end",
+            "",
+            "function MyController.exampleMethod()",
+            "\t",
+            "end",
+            "",
+            "return MyController"
+        ],
+        
+        "description": "Creates a controller template"
+    },
+
+    "Create controller": {
+        "prefix": "-controller",
+        "body": [
+            "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+            "local TypeDefinitions = require(ReplicatedStorage.Common.TypeDefinitions)",
+            "",
+            "type Controller = TypeDefinitions.Controller",
+            "",
+            "local MyController = {} :: Controller & {",
+            "\texampleMethod: () -> ()",
+            "}",
+            "",
+            "function MyController.onStart()",
+            "\t",
+            "end",
+            "",
+            "function MyController.exampleMethod()",
+            "\t",
+            "end",
+            "",
+            "return MyController"
+        ],
+        
+        "description": "Creates a controller template"
+    },
+
+    "Create service": {
+        "prefix": "-service",
+        "body": [
+            "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+            "local TypeDefinitions = require(ReplicatedStorage.Common.TypeDefinitions)",
+            "",
+            "type Service = TypeDefinitions.Service",
+            "",
+            "local MyService = {} :: Service & {",
+            "\texampleMethod: () -> ()",
+            "}",
+            "",
+            "function MyService.onStart()",
+            "\t",
+            "end",
+            "",
+            "function MyService.exampleMethod()",
+            "\t",
+            "end",
+            "",
+            "return MyService"
+        ],
+        
+        "description": "Creates a controller template"
+    },
+
+    "Create module": {
+        "prefix": "-module",
+        "body": [
+            "local Module = {}",
+            "",
+            "export type SomeType = {",
+            "\tproperty: string,",
+            "\tvalue: number,",
+            "}",
+            "",
+            "function Module.someFunction(parameter: string): SomeType",
+            "\tlocal success, result = pcall(function()",
+            "\t\treturn {",
+            "\t\t\tproperty = parameter,",
+            "\t\t\tvalue = 0,",
+            "\t\t}",
+            "\tend)",
+            "",
+            "\tif not success then",
+            "\t\terror(\"Failed to create instance: \" .. tostring(result))",
+            "\tend",
+            "",
+            "\treturn result :: SomeType",
+            "end",
+            "",
+            "return Module"
+        ],
+
+        "description": "Creates a controller template"
+    },
+
+    "Create react component": {
+        "prefix": "-react",
+        "body": [
+            "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+            "local React = require(ReplicatedStorage.Packages.react)",
+            "",
+            "local createElement = React.createElement",
+            "local memo = React.memo",
+            "",
+            "type Props = {",
+            "\ttitle: string,",
+            "\tvisible: boolean?,",
+            "}",
+            "",
+            "local function MyComponent(props: Props)",
+            "\treturn createElement(\"Frame\", {",
+            "\t\tVisible = props.visible or true,",
+            "\t\tSize = UDim2.fromScale(1, 1),",
+            "\t\tBackgroundTransparency = 1,",
+            "\t}, {",
+            "\t\tTitle = createElement(\"TextLabel\", {",
+            "\t\t\tText = props.title,",
+            "\t\t\tSize = UDim2.fromScale(1, 0.1),",
+            "\t\t\tPosition = UDim2.fromScale(0, 0),",
+            "\t\t\tTextColor3 = Color3.fromRGB(255, 255, 255),",
+            "\t\t\tBackgroundTransparency = 1,",
+            "\t\t}),",
+            "\t})",
+            "end",
+            "",
+            "return memo(MyComponent)"
+        ],
+
+        "description": "Creates a controller template"
+    },
+
+    "Create react app": {
+        "prefix": "-app",
+        "body": [
+            "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+            "local React = require(ReplicatedStorage.Packages.react)",
+            "",
+            "local createElement = React.createElement",
+            "local memo = React.memo",
+            "",
+            "local function TestApp()",
+            "\treturn createElement(\"Frame\", {",
+            "\t\tVisible = true,",
+            "\t\tSize = UDim2.fromScale(1, 1),",
+            "\t\tBackgroundTransparency = 1,",
+            "\t}, {",
+            "\t\tTitle = createElement(\"TextLabel\", {",
+            "\t\t\tText = \"Test App\",",
+            "\t\t\tSize = UDim2.fromScale(1, 0.1),",
+            "\t\t\tPosition = UDim2.fromScale(0, 0),",
+            "\t\t\tTextColor3 = Color3.fromRGB(255, 255, 255),",
+            "\t\t\tBackgroundTransparency = 1,",
+            "\t\t}),",
+            "\t})",
+            "end",
+            "",
+            "return memo(TestApp)"
+        ],
+
+        "description": "Creates a controller template"
+    },
+}
