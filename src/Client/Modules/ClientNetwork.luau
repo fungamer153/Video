@@ -122,6 +122,9 @@ if not RunService:IsRunning() then
 		StartTutorial = table.freeze({
 			on = noop
 		}),
+		ChangeChannelName = table.freeze({
+			call = noop
+		}),
 	}) :: Events
 end
 if RunService:IsServer() then
@@ -149,10 +152,12 @@ end
 
 RunService.Heartbeat:Connect(sendEvents)
 
-local reliable_events = table.create(1)
-local reliable_event_queue: { [number]: { any } } = table.create(1)
+local reliable_events = table.create(2)
+local reliable_event_queue: { [number]: { any } } = table.create(2)
+local function_call_id = 0
 reliable_events[0] = {}
 reliable_event_queue[0] = 0
+reliable_event_queue[1] = table.create(255)
 reliable.OnClientEvent:Connect(function(buff, inst)
 	incoming_buff = buff
 	incoming_inst = inst
@@ -173,6 +178,21 @@ reliable.OnClientEvent:Connect(function(buff, inst)
 					warn(`[ZAP] {reliable_event_queue[0]} events in queue for StartTutorial. Did you forget to attach a listener?`)
 				end
 			end
+		elseif id == 1 then
+			local call_id = buffer.readu8(incoming_buff, read(1))
+			local value
+			local bool_1 = buffer.readu8(incoming_buff, read(1))
+			if bit32.btest(bool_1, 0b0000000000000001) then
+				value = "Success"
+			else
+				value = "Fail"
+			end
+			local thread = reliable_event_queue[1][call_id]
+			-- When using actors it's possible for multiple Zap clients to exist, but only one called the Zap remote function.
+			if thread then
+				task.spawn(thread, value)
+			end
+			reliable_event_queue[1][call_id] = nil
 		else
 			error("Unknown event id")
 		end
@@ -193,6 +213,28 @@ local returns = {
 			return function()
 				table.remove(reliable_events[0], table.find(reliable_events[0], callback))
 			end
+		end,
+	},
+	ChangeChannelName = {
+		call = function(text: (string)): (("Success" | "Fail"))
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, 0)
+			function_call_id += 1
+			function_call_id %= 256
+			if reliable_event_queue[1][function_call_id] then
+				function_call_id -= 1
+				error("Zap has more than 256 calls awaiting a response, and therefore this packet has been dropped")
+			end
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, function_call_id)
+			local len_1 = #text
+			assert(utf8.len(text) ~= nil, "value is not valid utf-8")
+			alloc(2)
+			buffer.writeu16(outgoing_buff, outgoing_apos, len_1)
+			alloc(len_1)
+			buffer.writestring(outgoing_buff, outgoing_apos, text, len_1)
+			reliable_event_queue[1][function_call_id] = coroutine.running()
+			return coroutine.yield()
 		end,
 	},
 }

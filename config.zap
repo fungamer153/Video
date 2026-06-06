@@ -7,3 +7,9 @@ event StartTutorial = {
     type: Reliable,
     call: ManyAsync
 }
+
+funct ChangeChannelName = {
+    call: Async,
+    args: (text: string.utf8),
+    rets: enum { Success, Fail }
+}
