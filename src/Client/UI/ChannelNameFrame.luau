@@ -24,7 +24,7 @@ local function getHolder()
 end
 
 local function getTextBox()
-	return frame.Holder.Holder.InputBox.TextBox
+	return frame.Holder.InputBox.TextBox
 end
 
 local function getConfirmButton()
@@ -62,6 +62,10 @@ function ChannelNameFrame.onStart(channelNameFrame)
 	frame = channelNameFrame
 
 	getTextBox():GetPropertyChangedSignal("Text"):Connect(function()
+		local text = getTextBox().Text
+		local confirmButton = getConfirmButton()
+		confirmButton.Active = #text > 0
+		confirmButton.ImageLabel.ImageTransparency = if #text > 0 then 0 else 0.4
 		bopHolder()
 	end)
 
