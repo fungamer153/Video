@@ -14,10 +14,27 @@ local screenChanged = Signal.new()
 
 local function listToSet(list)
 	local set = {}
+
 	for _, name in list do
 		set[name] = true
 	end
+
 	return set
+end
+
+local function setVisible(instance, visible)
+	if instance:IsA("ScreenGui") then
+		instance.Enabled = visible
+	else
+		instance.Visible = visible
+	end
+end
+
+local function setParentVisible(instance, visible)
+	local parent = instance.Parent
+	if parent and parent:IsA("ScreenGui") then
+		parent.Enabled = visible
+	end
 end
 
 local function resolveHUDVisibility(entry)
@@ -50,7 +67,7 @@ end
 
 local function refreshAllHUDs()
 	for _, entry in hudRegistry do
-		entry.instance.Visible = resolveHUDVisibility(entry)
+		setVisible(entry.instance, resolveHUDVisibility(entry))
 	end
 end
 
@@ -59,13 +76,14 @@ local InterfaceController = {}
 function InterfaceController.registerHUD(name, instance, config)
 	local resolvedConfig = config or {}
 
-	hudRegistry[name] = {
+	local entry = {
 		name = name,
 		instance = instance,
 		visibleByDefault = if resolvedConfig.visibleByDefault ~= nil then resolvedConfig.visibleByDefault else true,
 	}
 
-	instance.Visible = hudRegistry[name].visibleByDefault
+	hudRegistry[name] = entry
+	setVisible(instance, entry.visibleByDefault)
 end
 
 function InterfaceController.registerScreen(name, instance, config)
@@ -82,14 +100,14 @@ function InterfaceController.registerScreen(name, instance, config)
 			InterfaceController.showScreen(name)
 		end)
 	else
-		instance.Visible = false
+		setVisible(instance, false)
 	end
 end
 
 function InterfaceController.showScreen(name)
 	local entry = screenRegistry[name]
 	if not entry then
-		warn("Screen not registered:", name)
+		warn("[InterfaceController] Screen not registered:", name)
 		return
 	end
 
@@ -102,14 +120,16 @@ function InterfaceController.showScreen(name)
 	if activeScreenName then
 		local previousScreen = screenRegistry[activeScreenName]
 		if previousScreen then
-			previousScreen.instance.Visible = false
+			setVisible(previousScreen.instance, false)
+			setParentVisible(previousScreen.instance, false)
 		end
 	end
 
 	activeScreenName = name
 	table.clear(hudOverrides)
 
-	entry.instance.Visible = true
+	setVisible(entry.instance, true)
+	setParentVisible(entry.instance, true)
 	refreshAllHUDs()
 
 	screenChanged:Fire(name)
@@ -124,7 +144,8 @@ function InterfaceController.hideScreen()
 
 	local currentScreen = screenRegistry[activeScreenName]
 	if currentScreen then
-		currentScreen.instance.Visible = false
+		setVisible(currentScreen.instance, false)
+		setParentVisible(currentScreen.instance, false)
 	end
 
 	activeScreenName = nil
@@ -153,7 +174,7 @@ function InterfaceController.showHUD(name)
 	end
 
 	hudOverrides[name] = true
-	entry.instance.Visible = resolveHUDVisibility(entry)
+	setVisible(entry.instance, resolveHUDVisibility(entry))
 end
 
 function InterfaceController.hideHUD(name)
@@ -163,7 +184,7 @@ function InterfaceController.hideHUD(name)
 	end
 
 	hudOverrides[name] = false
-	entry.instance.Visible = resolveHUDVisibility(entry)
+	setVisible(entry.instance, resolveHUDVisibility(entry))
 end
 
 function InterfaceController.toggleHUD(name)
@@ -173,7 +194,7 @@ function InterfaceController.toggleHUD(name)
 	end
 
 	hudOverrides[name] = not entry.instance.Visible
-	entry.instance.Visible = resolveHUDVisibility(entry)
+	setVisible(entry.instance, resolveHUDVisibility(entry))
 end
 
 function InterfaceController.isHUDVisible(name)
@@ -187,7 +208,7 @@ end
 function InterfaceController.hideAllHUDs()
 	for name, entry in hudRegistry do
 		hudOverrides[name] = false
-		entry.instance.Visible = false
+		setVisible(entry.instance, false)
 	end
 end
 
@@ -200,11 +221,28 @@ function InterfaceController.onStart()
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 	local hudGui = playerGui:WaitForChild("HUD")
-	InterfaceController.registerHUD("HUD", hudGui.MainFrame)
+	InterfaceController.registerHUD("HUD", hudGui, { visibleByDefault = false })
+	InterfaceController.registerHUD(
+		"RecordingFrame",
+		hudGui:WaitForChild("RecordingFrame"),
+		{ visibleByDefault = false }
+	)
 
 	local channelGui = playerGui:WaitForChild("Channel")
 	InterfaceController.registerScreen("Channel", channelGui, {
 		hideAllHUDs = false,
+		visibleByDefault = false,
+	})
+
+	local channelNameFrame = channelGui:WaitForChild("ChannelName")
+	InterfaceController.registerScreen("ChannelName", channelNameFrame, {
+		hideAllHUDs = true,
+		visibleByDefault = false,
+	})
+
+	local channelPreviewFrame = channelGui:WaitForChild("ChannelPreview")
+	InterfaceController.registerScreen("ChannelPreview", channelPreviewFrame, {
+		hideAllHUDs = true,
 		visibleByDefault = false,
 	})
 

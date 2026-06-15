@@ -4,30 +4,64 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ClientNetwork = require(ReplicatedStorage.Client.Modules.ClientNetwork)
 local InterfaceController = require(ReplicatedStorage.Client.Controllers.InterfaceController)
 local ChannelNameFrame = require(ReplicatedStorage.Client.UI.ChannelNameFrame)
+local ChannelPreviewFrame = require(ReplicatedStorage.Client.UI.ChannelPreviewFrame)
+local HUDFrame = require(ReplicatedStorage.Client.UI.HUDFrame)
 
 local TutorialController = {}
+
+local atomCleanups = {}
+
+local function stopAtomListeners()
+	for _, cleanup in atomCleanups do
+		cleanup()
+	end
+	table.clear(atomCleanups)
+end
+
+local function showChannelPreview(channelName)
+	stopAtomListeners()
+
+	ChannelPreviewFrame.setChannelName(channelName)
+	ChannelPreviewFrame.setViewers(0)
+	ChannelPreviewFrame.setSubscribers(1)
+
+	InterfaceController.showScreen("ChannelPreview")
+
+	ChannelPreviewFrame.onConfirm(function()
+		InterfaceController.hideScreen()
+		InterfaceController.showHUD("HUD")
+		HUDFrame.showOnlyMiddle()
+		stopAtomListeners()
+	end)
+end
 
 local function startTutorial()
 	InterfaceController.showScreen("ChannelName")
 
 	ChannelNameFrame.onConfirm(function(channelName)
-		local success = ClientNetwork.ChangeChannelName.call(channelName)
+		local result = ClientNetwork.ChangeChannelName.call(channelName)
 
-		if not success then
-			print("Channel name failed filter check")
+		if result ~= "Success" then
 			return
 		end
 
 		InterfaceController.hideScreen()
 		ChannelNameFrame.reset()
+		showChannelPreview(channelName)
 	end)
 end
 
 function TutorialController.onStart()
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
-	local channelNameFrame = playerGui:WaitForChild("Channel"):WaitForChild("ChannelName")
 
+	local channelNameFrame = playerGui:WaitForChild("Channel"):WaitForChild("ChannelName")
 	ChannelNameFrame.onStart(channelNameFrame)
+
+	local channelPreviewFrame = playerGui:WaitForChild("Channel"):WaitForChild("ChannelPreview")
+	ChannelPreviewFrame.onStart(channelPreviewFrame)
+
+	local hudUI = playerGui:WaitForChild("HUD")
+	HUDFrame.onStart(hudUI)
 
 	ClientNetwork.StartTutorial.on(function()
 		startTutorial()
