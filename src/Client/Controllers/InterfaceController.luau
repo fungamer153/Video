@@ -225,7 +225,7 @@ function InterfaceController.onStart()
 	InterfaceController.registerHUD(
 		"RecordingFrame",
 		hudGui:WaitForChild("RecordingFrame"),
-		{ visibleByDefault = false }
+		{ visibleByDefault = true }
 	)
 
 	local channelGui = playerGui:WaitForChild("Channel")

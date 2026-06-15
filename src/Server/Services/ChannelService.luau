@@ -4,7 +4,9 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ServerNetwork = require(ServerScriptService.Server.Modules.ServerNetwork)
 local ProfileService = require(ServerScriptService.Server.Services.ProfileService)
 
-local ChannelService = {}
+local ChannelService = {
+	videoCount = 0,
+}
 
 local function filterText(text, fromUserId)
 	local success, result = pcall(function()
@@ -24,6 +26,10 @@ local function filterText(text, fromUserId)
 	end
 
 	return filteredText
+end
+
+function ChannelService.getVideoCount()
+	return ChannelService.videoCount
 end
 
 function ChannelService.onStart()

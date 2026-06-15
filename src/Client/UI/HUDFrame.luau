@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local ClientNetwork = require(ReplicatedStorage.Client.Modules.ClientNetwork)
 local usePrimaryButton = require(ReplicatedStorage.Client.UI.Utility.usePrimaryButton)
 local RecordingFrame = require(ReplicatedStorage.Client.UI.RecordingFrame)
 local TopicPicker = require(ReplicatedStorage.Client.UI.TopicPicker)
@@ -46,11 +47,16 @@ function HUDFrame.onStart(hudUI)
 	TopicPicker.onStart(hudUI:WaitForChild("TopicPicker"))
 
 	TopicPicker.onTopicSelected(function(topicName)
-		TopicPicker.hide()
+		local succ = ClientNetwork.StartVideo.call(topicName)
 
-		task.delay(0.25, function()
-			RecordingFrame.show()
-		end)
+		if succ == "Success" then
+			TopicPicker.hide()
+			RecordingFrame.setupVideoTimeData(0, 1)
+
+			task.delay(0.25, function()
+				RecordingFrame.show()
+			end)
+		end
 	end)
 
 	usePrimaryButton(getRecordButton().TextButton, function()
@@ -63,7 +69,7 @@ function HUDFrame.showOnlyMiddle()
 	toggleMiddleFrame(true)
 
 	for _, child in ipairs(mainUI:GetChildren()) do
-		if child.Name ~= "MainFrame" then
+		if child.Name ~= "MainFrame" and child.Name ~= "RecordingFrame" then
 			child.Visible = false
 		end
 	end
