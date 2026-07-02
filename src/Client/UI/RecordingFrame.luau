@@ -11,11 +11,15 @@ local SHOWN_POSITION = UDim2.new(0.5, 0, 0.884, 0)
 local HIDDEN_POSITION = UDim2.new(0.5, 0, 1.1, 0)
 
 local ANIMATION_DURATION = 0.5
+local PULSE_TWEEN = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local PULSE_START_SIZE = 15
+local PULSE_END_SIZE = 42
 
 local BASE_DURATION = 30
 local TIME_INCREASE_MULTIPLIER = 1.05
 
 local frame = nil
+local rootFrame = nil
 local clickConnection = nil
 local passiveTimeConnection = nil
 
@@ -67,12 +71,14 @@ local function attemptFinishVideo()
 	if isFinishingVideo then
 		return
 	end
+
 	isFinishingVideo = true
 	cleanupConnections()
 	RecordingFrame.hide()
 end
 
 function RecordingFrame.onStart(recordingFrame)
+	rootFrame = recordingFrame
 	frame = recordingFrame.ProgressFrame
 	frame.Position = HIDDEN_POSITION
 
@@ -197,6 +203,40 @@ function RecordingFrame.registerClicks()
 				if alpha >= 1 then
 					orbConnection:Disconnect()
 					progressOrb:Destroy()
+
+					local pulse = Instance.new("Frame")
+					pulse.Name = "ProgressPulse"
+					pulse.AnchorPoint = Vector2.new(0.5, 0.5)
+					pulse.Position = UDim2.fromOffset(orbTargetX, orbTargetY)
+					pulse.Size = UDim2.fromOffset(PULSE_START_SIZE, PULSE_START_SIZE)
+					pulse.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+					pulse.BackgroundTransparency = 0.2
+					pulse.BorderSizePixel = 0
+					pulse.ZIndex = 5
+					pulse.Parent = frame
+
+					local pulseCorner = Instance.new("UICorner")
+					pulseCorner.CornerRadius = UDim.new(1, 0)
+					pulseCorner.Parent = pulse
+
+					local pulseStroke = Instance.new("UIStroke")
+					pulseStroke.Color = Color3.fromRGB(255, 255, 255)
+					pulseStroke.Thickness = 2
+					pulseStroke.Transparency = 0.2
+					pulseStroke.Parent = pulse
+
+					TweenService:Create(pulse, PULSE_TWEEN, {
+						Size = UDim2.fromOffset(PULSE_END_SIZE, PULSE_END_SIZE),
+						BackgroundTransparency = 1,
+					}):Play()
+
+					TweenService:Create(pulseStroke, PULSE_TWEEN, {
+						Transparency = 1,
+					}):Play()
+
+					task.delay(PULSE_TWEEN.Time, function()
+						pulse:Destroy()
+					end)
 				end
 			end)
 		end
@@ -204,8 +244,10 @@ function RecordingFrame.registerClicks()
 end
 
 function RecordingFrame.show()
-	isFinishingVideo = false
+	rootFrame.Visible = true
 	frame.Visible = true
+
+	isFinishingVideo = false
 	frame.Position = HIDDEN_POSITION
 
 	TweenService:Create(frame, SHOW_TWEEN, {
@@ -224,6 +266,7 @@ function RecordingFrame.hide()
 
 	task.delay(HIDE_TWEEN.Time, function()
 		frame.Visible = false
+		rootFrame.Visible = false
 	end)
 end
 

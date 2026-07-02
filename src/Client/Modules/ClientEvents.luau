@@ -1,7 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Signal = require(ReplicatedStorage.Packages.Signal)
 
-export type EventName = "PlayerJoined"
+export type EventName = "PlayerJoined" | "SetFov"
 type ExtraData = { [string]: any }
 
 local signals = {}

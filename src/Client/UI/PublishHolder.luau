@@ -45,14 +45,14 @@ local STAT_QUOTES = {
 	},
 }
 
-local POP_TWEEN = TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+local POP_TWEEN = TweenInfo.new(0.65, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 local HIDE_TWEEN = TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-local BAR_TWEEN = TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-local BAR_STAGGER = 0.06
+local BAR_TWEEN = TweenInfo.new(0.7, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+local BAR_STAGGER = BAR_TWEEN.Time / 1.5
 local BAR_SEQUENCE_DURATION = (#STAT_KEYS - 1) * BAR_STAGGER + BAR_TWEEN.Time
 
-local COUNT_DURATION = 0.8
-local COUNT_START_DELAY = 1
+local COUNT_DURATION = 0.4
+local COUNT_START_DELAY = 0.2
 local CONFIRM_FADE_TWEEN = TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
 local MIN_DISPLAY_SCALE = 0.05
@@ -154,15 +154,13 @@ local function animateBar(key, value, maxValue, index)
 	local bar = bars[key]
 	local clampedValue = math.clamp(value, 0, 1)
 	local proportion = 0
+
 	if maxValue > 0 then
 		proportion = clampedValue / maxValue
 	end
 	local displayScale = MIN_DISPLAY_SCALE + proportion * (MAX_DISPLAY_SCALE - MIN_DISPLAY_SCALE)
 	local height = bar.maxHeight * displayScale
 	local targetPosY = bar.bottom - height
-
-	bar.instance.Size = UDim2.new(bar.xScale, bar.xOffset, 0, bar.yOffset)
-	bar.instance.Position = UDim2.new(bar.posXScale, bar.posXOffset, bar.bottom, 0)
 
 	task.delay(index * BAR_STAGGER, function()
 		if not bar.instance or not bar.instance.Parent then
@@ -197,11 +195,11 @@ function PublishHolder.setStats(stats)
 		end
 	end
 
+	setDescription(topKey)
+
 	for index, key in STAT_KEYS do
 		animateBar(key, stats[key] or 0, maxValue, index - 1)
 	end
-
-	setDescription(topKey)
 end
 
 local function countUp(label, targetValue, onComplete)
@@ -227,6 +225,15 @@ local function countUp(label, targetValue, onComplete)
 end
 
 function PublishHolder.show(stats)
+	for _, key in STAT_KEYS do
+		local b = bars[key]
+
+		if b and b.instance then
+			b.instance.Size = UDim2.new(b.xScale, b.xOffset, 0, b.yOffset)
+			b.instance.Position = UDim2.new(b.posXScale, b.posXOffset, b.bottom, 0)
+		end
+	end
+
 	frame.Size = UDim2.new(baseSize.X.Scale * 0.8, baseSize.X.Offset, baseSize.Y.Scale * 0.8, baseSize.Y.Offset)
 
 	TweenService:Create(frame, POP_TWEEN, {
@@ -234,29 +241,32 @@ function PublishHolder.show(stats)
 	}):Play()
 
 	setConfirmTransparent()
-	PublishHolder.setStats(stats)
 
-	viewsLabel.Text = "+ 0"
-	subscribersLabel.Text = "+ 0"
+	task.delay(0.5, function()
+		PublishHolder.setStats(stats)
 
-	task.delay(BAR_SEQUENCE_DURATION + COUNT_START_DELAY, function()
-		local viewersDone = false
-		local subscribersDone = false
+		viewsLabel.Text = "+ 0"
+		subscribersLabel.Text = "+ 0"
 
-		local function tryFadeInConfirm()
-			if viewersDone and subscribersDone then
-				fadeInConfirm()
+		task.delay(BAR_SEQUENCE_DURATION + COUNT_START_DELAY, function()
+			local viewersDone = false
+			local subscribersDone = false
+
+			local function tryFadeInConfirm()
+				if viewersDone and subscribersDone then
+					fadeInConfirm()
+				end
 			end
-		end
 
-		countUp(viewsLabel, stats.viewersGained or 0, function()
-			viewersDone = true
-			tryFadeInConfirm()
-		end)
+			countUp(viewsLabel, stats.viewersGained or 0, function()
+				viewersDone = true
+				tryFadeInConfirm()
+			end)
 
-		countUp(subscribersLabel, stats.subscribersGained or 0, function()
-			subscribersDone = true
-			tryFadeInConfirm()
+			countUp(subscribersLabel, stats.subscribersGained or 0, function()
+				subscribersDone = true
+				tryFadeInConfirm()
+			end)
 		end)
 	end)
 end

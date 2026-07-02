@@ -7,4 +7,6 @@ local atom = Charm.atom
 return {
 	viewers = atom(0),
 	subscribers = atom(0),
+	fov = atom(70),
+	gems = atom(0),
 }

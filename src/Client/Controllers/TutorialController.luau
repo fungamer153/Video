@@ -62,6 +62,14 @@ function TutorialController.onStart()
 	local channelPreviewFrame = playerGui:WaitForChild("Channel"):WaitForChild("ChannelPreview")
 	ChannelPreviewFrame.onStart(channelPreviewFrame)
 
+	while not InterfaceController.isScreenRegistered("ChannelName") do
+		task.wait()
+	end
+
+	ClientNetwork.StartTutorial.on(function()
+		startTutorial()
+	end)
+
 	local hudUI = playerGui:WaitForChild("HUD")
 	HUDFrame.onStart(hudUI)
 
@@ -71,6 +79,7 @@ function TutorialController.onStart()
 	PublishHolder.onConfirm(function()
 		PublishHolder.hide(function()
 			InterfaceController.hideScreen()
+			HUDFrame.showMainHUD()
 		end)
 	end)
 
@@ -80,12 +89,6 @@ function TutorialController.onStart()
 
 		InterfaceController.showScreen("PublishStats")
 		PublishHolder.show(stats)
-	end)
-
-	print(121221)
-
-	ClientNetwork.StartTutorial.on(function()
-		startTutorial()
 	end)
 end
 

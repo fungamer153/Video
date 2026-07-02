@@ -155,6 +155,10 @@ function InterfaceController.hideScreen()
 	screenChanged:Fire(nil)
 end
 
+function InterfaceController.isScreenRegistered(name)
+	return screenRegistry[name] ~= nil
+end
+
 function InterfaceController.getCurrentScreen()
 	return activeScreenName
 end

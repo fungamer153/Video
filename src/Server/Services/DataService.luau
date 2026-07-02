@@ -26,6 +26,7 @@ local DataService = {}
 function DataService.onStart()
 	Players.PlayerAdded:Connect(function(player)
 		playerStore:loadAsync(player)
+		player:SetAttribute("Loaded", true)
 		ServerEvents.fire("PlayerJoined", { player = player })
 	end)
 

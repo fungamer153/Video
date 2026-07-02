@@ -1,5 +1,4 @@
 local ServerScriptService = game:GetService("ServerScriptService")
-local TextService = game:GetService("TextService")
 
 local ServerEvents = require(ServerScriptService.Server.Modules.ServerEvents)
 local ServerNetwork = require(ServerScriptService.Server.Modules.ServerNetwork)
@@ -15,7 +14,6 @@ local function onPlayerJoined(player: Player)
 	end
 
 	if not profileData.tutorialComplete then
-		print(11111)
 		ServerNetwork.StartTutorial.fire(player)
 		return
 	end

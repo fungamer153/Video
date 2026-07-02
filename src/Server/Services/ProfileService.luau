@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local HttpService = game:GetService("HttpService")
 
 local Charm = require(ReplicatedStorage.Packages.Charm)
 local ServerEvents = require(ServerScriptService.Server.Modules.ServerEvents)
@@ -9,13 +10,34 @@ local ProfileTemplate = require(ServerScriptService.Server.Modules.ProfileTempla
 
 local playerAtoms: { [Player]: { [string]: any } } = {}
 
+local function migrateEquipment(equipmentData: any): { [string]: any }
+	local migrated = {}
+
+	for slotName, defaultSlot in ProfileTemplate.template.equipment do
+		local currentSlot = equipmentData and equipmentData[slotName]
+
+		if
+			typeof(currentSlot) == "table"
+			and typeof(currentSlot.level) == "number"
+			and typeof(currentSlot.skin) == "string"
+		then
+			migrated[slotName] = currentSlot
+		else
+			migrated[slotName] = table.clone(defaultSlot)
+		end
+	end
+
+	return migrated
+end
+
 local function createProfileAtoms(profileData: { [string]: any }): { [string]: any }
 	return {
 		tutorialComplete = Charm.atom(profileData.tutorialComplete),
 		videoProgress = Charm.atom(profileData.videoProgress),
 		viewers = Charm.atom(profileData.viewers),
 		subscribers = Charm.atom(profileData.subscribers),
-		equipment = Charm.atom(profileData.equipment),
+		gems = Charm.atom(profileData.gems),
+		equipment = Charm.atom(migrateEquipment(profileData.equipment)),
 		channel = Charm.atom(profileData.channel),
 	}
 end
@@ -34,6 +56,7 @@ local function commitField(player, field, value)
 			end
 		end
 
+		profileData.equipment = migrateEquipment(profileData.equipment)
 		profileData[field] = value
 		return true
 	end)
@@ -56,6 +79,28 @@ function ProfileService.onStart()
 
 		playerAtoms[player] = createProfileAtoms(profileData)
 		print("Profile atoms initialised for", player.Name)
+
+		local atoms = playerAtoms[player]
+		player:SetAttribute("equipment_json", HttpService:JSONEncode(atoms.equipment()))
+		player:SetAttribute("stat_gems", atoms.gems())
+		player:SetAttribute("stat_viewers", atoms.viewers())
+		player:SetAttribute("stat_subscribers", atoms.subscribers())
+
+		Charm.subscribe(atoms.equipment, function(newValue)
+			player:SetAttribute("equipment_json", HttpService:JSONEncode(newValue))
+		end)
+
+		Charm.subscribe(atoms.gems, function(newValue)
+			player:SetAttribute("stat_gems", newValue)
+		end)
+
+		Charm.subscribe(atoms.viewers, function(newValue)
+			player:SetAttribute("stat_viewers", newValue)
+		end)
+
+		Charm.subscribe(atoms.subscribers, function(newValue)
+			player:SetAttribute("stat_subscribers", newValue)
+		end)
 	end)
 
 	ServerEvents.connect("PlayerLeft", function(extraData: { player: Player })
@@ -75,7 +120,7 @@ end
 function ProfileService.observe(player: Player, field: string, callback: (newValue: any, oldValue: any) -> ()): () -> ()
 	local atoms = requireAtoms(player)
 	assert(atoms[field], "Unknown field: " .. tostring(field))
-	return Charm.observe(atoms[field], callback)
+	return Charm.subscribe(atoms[field], callback)
 end
 
 -- Subscribers
@@ -98,14 +143,33 @@ function ProfileService.setViewers(player: Player, amount: number)
 	commitField(player, "viewers", amount)
 end
 
+-- Gems
+function ProfileService.addGems(player: Player, amount: number)
+	local currentGems: number = ProfileService.get(player, "gems")
+	commitField(player, "gems", currentGems + amount)
+end
+
+function ProfileService.setGems(player: Player, amount: number)
+	commitField(player, "gems", amount)
+end
+
 -- Video Progress
 function ProfileService.setVideoProgress(player: Player, progress: number)
 	commitField(player, "videoProgress", progress)
 end
 
 -- Equipment
-function ProfileService.setEquipment(player: Player, equipmentData: { laptop: string, desk: string })
+type EquipmentSlot = { level: number, skin: string }
+
+function ProfileService.setEquipment(player: Player, equipmentData: { laptop: EquipmentSlot, desk: EquipmentSlot })
 	commitField(player, "equipment", equipmentData)
+end
+
+function ProfileService.setEquipmentSlot(player: Player, slotName: string, slotData: EquipmentSlot)
+	local currentEquipment = ProfileService.get(player, "equipment")
+	local updatedEquipment = table.clone(currentEquipment)
+	updatedEquipment[slotName] = slotData
+	commitField(player, "equipment", updatedEquipment)
 end
 
 -- Channel

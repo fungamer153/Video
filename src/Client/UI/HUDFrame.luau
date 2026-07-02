@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
 local ClientNetwork = require(ReplicatedStorage.Client.Modules.ClientNetwork)
 local ClientAtoms = require(ReplicatedStorage.Client.Modules.ClientAtoms)
@@ -47,16 +48,68 @@ local function getViewsLabel()
 	return mainUI.Views.Views
 end
 
+local function getSubscribersLabel()
+	return mainUI.SubscriberFrame.Frame.Subscribers
+end
+
+local function getGemsLabel()
+	return mainUI.Gems.Money
+end
+
 function HUDFrame.onStart(hudUI)
 	mainUI = hudUI
 
 	RecordingFrame.onStart(hudUI:WaitForChild("RecordingFrame"))
 	TopicPicker.onStart(hudUI:WaitForChild("TopicPicker"))
 
+	local player = Players.LocalPlayer
+	local recordingButton = getRecordButton()
+
+	local function seedAtoms()
+		local viewers = player:GetAttribute("stat_viewers")
+		local subscribers = player:GetAttribute("stat_subscribers")
+		local gems = player:GetAttribute("stat_gems")
+
+		if viewers then
+			ClientAtoms.viewers(viewers)
+		end
+
+		if subscribers then
+			ClientAtoms.subscribers(subscribers)
+		end
+
+		if gems then
+			ClientAtoms.gems(gems)
+		end
+	end
+	seedAtoms()
+
+	player:GetAttributeChangedSignal("stat_viewers"):Connect(function()
+		ClientAtoms.viewers(player:GetAttribute("stat_viewers") or 0)
+	end)
+
+	player:GetAttributeChangedSignal("stat_subscribers"):Connect(function()
+		ClientAtoms.subscribers(player:GetAttribute("stat_subscribers") or 0)
+	end)
+
+	player:GetAttributeChangedSignal("stat_gems"):Connect(function()
+		ClientAtoms.gems(player:GetAttribute("stat_gems") or 0)
+	end)
+
 	getViewsLabel().Text = tostring(ClientAtoms.viewers())
+	getSubscribersLabel().Text = tostring(ClientAtoms.subscribers())
+	getGemsLabel().Text = tostring(ClientAtoms.gems())
 
 	Charm.subscribe(ClientAtoms.viewers, function(newValue)
 		getViewsLabel().Text = tostring(newValue)
+	end)
+
+	Charm.subscribe(ClientAtoms.subscribers, function(newValue)
+		getSubscribersLabel().Text = tostring(newValue)
+	end)
+
+	Charm.subscribe(ClientAtoms.gems, function(newValue)
+		getGemsLabel().Text = tostring(newValue)
 	end)
 
 	TopicPicker.onTopicSelected(function(topicName)
@@ -72,7 +125,9 @@ function HUDFrame.onStart(hudUI)
 		end
 	end)
 
-	usePrimaryButton(getRecordButton().TextButton, function()
+	print(recordingButton)
+
+	usePrimaryButton(recordingButton.TextButton, function()
 		TopicPicker.show()
 		toggleMiddleFrame(false)
 	end)
@@ -104,7 +159,7 @@ function HUDFrame.showMainHUD()
 	mainUI.MainFrame.Visible = true
 	mainUI.LeftButtons.Visible = true
 	mainUI.Gems.Visible = true
-	mainUI.FriendBoost.Visible = true
+	mainUI.SubscriberFrame.Visible = true
 	mainUI.RecordingFrame.Visible = false
 end
 
