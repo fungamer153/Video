@@ -165,7 +165,7 @@ local reliable_events = table.create(4)
 local reliable_event_queue: { [number]: { any } } = table.create(4)
 local function_call_id = 0
 reliable_events[1] = {}
-reliable_event_queue[1] = 0
+reliable_event_queue[1] = {}
 reliable_events[0] = {}
 reliable_event_queue[0] = 0
 reliable_event_queue[2] = table.create(255)
@@ -180,14 +180,21 @@ reliable.OnClientEvent:Connect(function(buff, inst)
 		local id = buffer.readu8(buff, read(1))
 		if id == 1 then
 			local value
+			value = {  }
+			value["bad"] = buffer.readf32(incoming_buff, read(4))
+			value["better"] = buffer.readf32(incoming_buff, read(4))
+			value["meh"] = buffer.readf32(incoming_buff, read(4))
+			value["mediocre"] = buffer.readf32(incoming_buff, read(4))
+			value["great"] = buffer.readf32(incoming_buff, read(4))
+			value["awesome"] = buffer.readf32(incoming_buff, read(4))
 			if reliable_events[1][1] then
 				for _, cb in reliable_events[1] do
 					task.spawn(cb, value)
 				end
 			else
-				reliable_event_queue[1] += 1
-				if reliable_event_queue[1] > 16 then
-					warn(`[ZAP] {reliable_event_queue[1]} events in queue for VideoComplete. Did you forget to attach a listener?`)
+				table.insert(reliable_event_queue[1], value)
+				if #reliable_event_queue[1] > 64 then
+					warn(`[ZAP] {#reliable_event_queue[1]} events in queue for VideoComplete. Did you forget to attach a listener?`)
 				end
 			end
 		elseif id == 0 then
@@ -243,12 +250,19 @@ table.freeze(polling_queues_unreliable)
 local returns = {
 	sendEvents = sendEvents,
 	VideoComplete = {
-		on = function(callback: () -> ())
+		on = function(callback: (value: ({
+			["bad"]: (number),
+			["better"]: (number),
+			["meh"]: (number),
+			["mediocre"]: (number),
+			["great"]: (number),
+			["awesome"]: (number),
+		})) -> ())
 			table.insert(reliable_events[1], callback)
-			for _ = 1, reliable_event_queue[1] do
-				task.spawn(callback)
+			for _, value in reliable_event_queue[1] do
+				task.spawn(callback, value)
 			end
-			reliable_event_queue[1] = 0
+			reliable_event_queue[1] = {}
 			return function()
 				table.remove(reliable_events[1], table.find(reliable_events[1], callback))
 			end

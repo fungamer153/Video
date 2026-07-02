@@ -15,6 +15,7 @@ local function onPlayerJoined(player: Player)
 	end
 
 	if not profileData.tutorialComplete then
+		print(11111)
 		ServerNetwork.StartTutorial.fire(player)
 		return
 	end
@@ -25,10 +26,6 @@ end
 function PlayerService.onStart()
 	ServerEvents.connect("PlayerJoined", function(extraData: { player: Player })
 		onPlayerJoined(extraData.player)
-	end)
-
-	ServerNetwork.ChangeChannelName.setCallback(function(player: Player)
-		ServerNetwork.StartTutorial.fire(player)
 	end)
 end
 

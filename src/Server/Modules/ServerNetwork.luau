@@ -276,16 +276,54 @@ table.freeze(polling_queues_unreliable)
 local returns = {
 	sendEvents = sendEvents,
 	VideoComplete = {
-		fire = function(player: Player)
+		fire = function(player: Player, value: ({
+			["bad"]: (number),
+			["better"]: (number),
+			["meh"]: (number),
+			["mediocre"]: (number),
+			["great"]: (number),
+			["awesome"]: (number),
+		}))
 			load_player(player)
 			alloc(1)
 			buffer.writeu8(outgoing_buff, outgoing_apos, 1)
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["bad"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["better"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["meh"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["mediocre"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["great"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["awesome"])
 			player_map[player] = save()
 		end,
-		fireAll = function()
+		fireAll = function(value: ({
+			["bad"]: (number),
+			["better"]: (number),
+			["meh"]: (number),
+			["mediocre"]: (number),
+			["great"]: (number),
+			["awesome"]: (number),
+		}))
 			load_empty()
 			alloc(1)
 			buffer.writeu8(outgoing_buff, outgoing_apos, 1)
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["bad"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["better"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["meh"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["mediocre"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["great"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["awesome"])
 			local buff, used, inst = outgoing_buff, outgoing_used, outgoing_inst
 			for _, player in Players:GetPlayers() do
 				load_player(player)
@@ -295,10 +333,29 @@ local returns = {
 				player_map[player] = save()
 			end
 		end,
-		fireExcept = function(except: Player)
+		fireExcept = function(except: Player, value: ({
+			["bad"]: (number),
+			["better"]: (number),
+			["meh"]: (number),
+			["mediocre"]: (number),
+			["great"]: (number),
+			["awesome"]: (number),
+		}))
 			load_empty()
 			alloc(1)
 			buffer.writeu8(outgoing_buff, outgoing_apos, 1)
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["bad"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["better"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["meh"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["mediocre"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["great"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["awesome"])
 			local buff, used, inst = outgoing_buff, outgoing_used, outgoing_inst
 			for _, player in Players:GetPlayers() do
 				if player ~= except then
@@ -310,10 +367,29 @@ local returns = {
 				end
 			end
 		end,
-		fireList = function(list: { [unknown]: Player })
+		fireList = function(list: { [unknown]: Player }, value: ({
+			["bad"]: (number),
+			["better"]: (number),
+			["meh"]: (number),
+			["mediocre"]: (number),
+			["great"]: (number),
+			["awesome"]: (number),
+		}))
 			load_empty()
 			alloc(1)
 			buffer.writeu8(outgoing_buff, outgoing_apos, 1)
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["bad"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["better"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["meh"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["mediocre"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["great"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["awesome"])
 			local buff, used, inst = outgoing_buff, outgoing_used, outgoing_inst
 			for _, player in list do
 				load_player(player)
@@ -323,10 +399,29 @@ local returns = {
 				player_map[player] = save()
 			end
 		end,
-		fireSet = function(set: { [Player]: any })
+		fireSet = function(set: { [Player]: any }, value: ({
+			["bad"]: (number),
+			["better"]: (number),
+			["meh"]: (number),
+			["mediocre"]: (number),
+			["great"]: (number),
+			["awesome"]: (number),
+		}))
 			load_empty()
 			alloc(1)
 			buffer.writeu8(outgoing_buff, outgoing_apos, 1)
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["bad"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["better"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["meh"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["mediocre"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["great"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, value["awesome"])
 			local buff, used, inst = outgoing_buff, outgoing_used, outgoing_inst
 			for player in set do
 				load_player(player)

@@ -6,6 +6,8 @@ local InterfaceController = require(ReplicatedStorage.Client.Controllers.Interfa
 local ChannelNameFrame = require(ReplicatedStorage.Client.UI.ChannelNameFrame)
 local ChannelPreviewFrame = require(ReplicatedStorage.Client.UI.ChannelPreviewFrame)
 local HUDFrame = require(ReplicatedStorage.Client.UI.HUDFrame)
+local PublishHolder = require(ReplicatedStorage.Client.UI.PublishHolder)
+local ClientAtoms = require(ReplicatedStorage.Client.Modules.ClientAtoms)
 
 local TutorialController = {}
 
@@ -62,6 +64,25 @@ function TutorialController.onStart()
 
 	local hudUI = playerGui:WaitForChild("HUD")
 	HUDFrame.onStart(hudUI)
+
+	local publishHolderUI = playerGui:WaitForChild("PublishStats"):WaitForChild("PublishHolder")
+	PublishHolder.onStart(publishHolderUI)
+
+	PublishHolder.onConfirm(function()
+		PublishHolder.hide(function()
+			InterfaceController.hideScreen()
+		end)
+	end)
+
+	ClientNetwork.VideoComplete.on(function(stats)
+		ClientAtoms.viewers(ClientAtoms.viewers() + (stats.viewersGained or 0))
+		ClientAtoms.subscribers(ClientAtoms.subscribers() + (stats.subscribersGained or 0))
+
+		InterfaceController.showScreen("PublishStats")
+		PublishHolder.show(stats)
+	end)
+
+	print(121221)
 
 	ClientNetwork.StartTutorial.on(function()
 		startTutorial()

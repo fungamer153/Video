@@ -2,6 +2,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local ClientNetwork = require(ReplicatedStorage.Client.Modules.ClientNetwork)
+local ClientAtoms = require(ReplicatedStorage.Client.Modules.ClientAtoms)
+local Charm = require(ReplicatedStorage.Packages.Charm)
+local InterfaceController = require(ReplicatedStorage.Client.Controllers.InterfaceController)
 local usePrimaryButton = require(ReplicatedStorage.Client.UI.Utility.usePrimaryButton)
 local RecordingFrame = require(ReplicatedStorage.Client.UI.RecordingFrame)
 local TopicPicker = require(ReplicatedStorage.Client.UI.TopicPicker)
@@ -40,11 +43,21 @@ local function stopShineRotation()
 	end
 end
 
+local function getViewsLabel()
+	return mainUI.Views.Views
+end
+
 function HUDFrame.onStart(hudUI)
 	mainUI = hudUI
 
 	RecordingFrame.onStart(hudUI:WaitForChild("RecordingFrame"))
 	TopicPicker.onStart(hudUI:WaitForChild("TopicPicker"))
+
+	getViewsLabel().Text = tostring(ClientAtoms.viewers())
+
+	Charm.subscribe(ClientAtoms.viewers, function(newValue)
+		getViewsLabel().Text = tostring(newValue)
+	end)
 
 	TopicPicker.onTopicSelected(function(topicName)
 		local succ = ClientNetwork.StartVideo.call(topicName)
@@ -81,6 +94,18 @@ end
 function HUDFrame.showRecordingFrame()
 	toggleMiddleFrame(false)
 	mainUI.RecordingFrame.Visible = true
+end
+
+function HUDFrame.showMainHUD()
+	InterfaceController.showHUD("HUD")
+
+	mainUI.Views.Visible = true
+	mainUI.UpperButtons.Visible = true
+	mainUI.MainFrame.Visible = true
+	mainUI.LeftButtons.Visible = true
+	mainUI.Gems.Visible = true
+	mainUI.FriendBoost.Visible = true
+	mainUI.RecordingFrame.Visible = false
 end
 
 function HUDFrame.showAll()

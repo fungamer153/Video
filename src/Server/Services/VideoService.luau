@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 
 local ChannelService = require(ServerScriptService.Server.Services.ChannelService)
 local ServerNetwork = require(ServerScriptService.Server.Modules.ServerNetwork)
+local ProfileService = require(ServerScriptService.Server.Services.ProfileService)
 
 local VideoService = {
 	activeRecords = {},
@@ -101,8 +102,90 @@ function VideoService.onStart()
 	end)
 end
 
+local STAT_KEYS = { "bad", "better", "meh", "mediocre", "great", "awesome" }
+
+function VideoService.generatePublishStats(player: Player)
+	local weights = {}
+	local totalWeight = 0
+
+	for _, key in STAT_KEYS do
+		local weight = math.random()
+		weights[key] = weight
+		totalWeight += weight
+	end
+
+	local budget = 1
+	local stats = {}
+
+	for _, key in STAT_KEYS do
+		stats[key] = (weights[key] / totalWeight) * budget
+	end
+
+	return stats
+end
+
+local STAT_QUALITY_WEIGHTS = {
+	bad = 0,
+	better = 0.2,
+	meh = 0.4,
+	mediocre = 0.6,
+	great = 0.8,
+	awesome = 1,
+}
+
+local MIN_VIEWERS_GAINED = 20
+local MAX_VIEWERS_GAINED = 500
+local MIN_SUBSCRIBERS_GAINED = 0
+local MAX_SUBSCRIBERS_GAINED = 40
+
+function VideoService.calculateVideoRewards(stats)
+	local qualityScore = 0
+
+	for key, weight in STAT_QUALITY_WEIGHTS do
+		qualityScore += (stats[key] or 0) * weight
+	end
+
+	qualityScore = math.clamp(qualityScore, 0, 1)
+
+	local viewersGained = math.floor(MIN_VIEWERS_GAINED + qualityScore * (MAX_VIEWERS_GAINED - MIN_VIEWERS_GAINED))
+	local subscribersGained =
+		math.floor(MIN_SUBSCRIBERS_GAINED + qualityScore * (MAX_SUBSCRIBERS_GAINED - MIN_SUBSCRIBERS_GAINED))
+
+	return viewersGained, subscribersGained
+end
+
 function VideoService.completeVideo(player: Player)
-	print(player.Name .. " completed their video!")
+	local stats = VideoService.generatePublishStats(player)
+	local viewersGained, subscribersGained = VideoService.calculateVideoRewards(stats)
+
+	ProfileService.addViewers(player, viewersGained)
+	ProfileService.addSubscribers(player, subscribersGained)
+
+	print(
+		player.Name
+			.. " video stats -> bad: "
+			.. string.format("%.3f", stats.bad)
+			.. " better: "
+			.. string.format("%.3f", stats.better)
+			.. " meh: "
+			.. string.format("%.3f", stats.meh)
+			.. " mediocre: "
+			.. string.format("%.3f", stats.mediocre)
+			.. " great: "
+			.. string.format("%.3f", stats.great)
+			.. " awesome: "
+			.. string.format("%.3f", stats.awesome)
+			.. " -> +"
+			.. viewersGained
+			.. " viewers, +"
+			.. subscribersGained
+			.. " subscribers"
+	)
+
+	stats.viewersGained = viewersGained
+	stats.subscribersGained = subscribersGained
+
+	ServerNetwork.VideoComplete.fire(player, stats)
 end
 
 return VideoService
