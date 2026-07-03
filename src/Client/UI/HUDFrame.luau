@@ -27,13 +27,31 @@ local function toggleMiddleFrame(state)
 	mainUI.MainFrame.Visible = state
 end
 
+local function getBackgroundImages()
+	local images = {}
+
+	for _, child in ipairs(getRecordButton():GetChildren()) do
+		if child:IsA("ImageLabel") and child.Name == "ImageLabel" then
+			table.insert(images, child)
+		end
+	end
+
+	return images
+end
+
 local function startShineRotation()
 	if shineConnection then
 		shineConnection:Disconnect()
 	end
 
+	local backgroundImages = getBackgroundImages()
+
 	shineConnection = RunService.Heartbeat:Connect(function(dt)
 		getShine().Rotation = (getShine().Rotation + dt * 30) % 360
+
+		for _, image in backgroundImages do
+			image.Rotation = (image.Rotation + dt * 30) % 360
+		end
 	end)
 end
 
@@ -52,10 +70,6 @@ local function getSubscribersLabel()
 	return mainUI.SubscriberFrame.Frame.Subscribers
 end
 
-local function getGemsLabel()
-	return mainUI.Gems.Money
-end
-
 function HUDFrame.onStart(hudUI)
 	mainUI = hudUI
 
@@ -68,7 +82,6 @@ function HUDFrame.onStart(hudUI)
 	local function seedAtoms()
 		local viewers = player:GetAttribute("stat_viewers")
 		local subscribers = player:GetAttribute("stat_subscribers")
-		local gems = player:GetAttribute("stat_gems")
 
 		if viewers then
 			ClientAtoms.viewers(viewers)
@@ -76,10 +89,6 @@ function HUDFrame.onStart(hudUI)
 
 		if subscribers then
 			ClientAtoms.subscribers(subscribers)
-		end
-
-		if gems then
-			ClientAtoms.gems(gems)
 		end
 	end
 	seedAtoms()
@@ -92,13 +101,8 @@ function HUDFrame.onStart(hudUI)
 		ClientAtoms.subscribers(player:GetAttribute("stat_subscribers") or 0)
 	end)
 
-	player:GetAttributeChangedSignal("stat_gems"):Connect(function()
-		ClientAtoms.gems(player:GetAttribute("stat_gems") or 0)
-	end)
-
 	getViewsLabel().Text = tostring(ClientAtoms.viewers())
 	getSubscribersLabel().Text = tostring(ClientAtoms.subscribers())
-	getGemsLabel().Text = tostring(ClientAtoms.gems())
 
 	Charm.subscribe(ClientAtoms.viewers, function(newValue)
 		getViewsLabel().Text = tostring(newValue)
@@ -106,10 +110,6 @@ function HUDFrame.onStart(hudUI)
 
 	Charm.subscribe(ClientAtoms.subscribers, function(newValue)
 		getSubscribersLabel().Text = tostring(newValue)
-	end)
-
-	Charm.subscribe(ClientAtoms.gems, function(newValue)
-		getGemsLabel().Text = tostring(newValue)
 	end)
 
 	TopicPicker.onTopicSelected(function(topicName)
@@ -125,12 +125,18 @@ function HUDFrame.onStart(hudUI)
 		end
 	end)
 
+	TopicPicker.onClose(function()
+		toggleMiddleFrame(true)
+	end)
+
 	print(recordingButton)
 
 	usePrimaryButton(recordingButton.TextButton, function()
 		TopicPicker.show()
 		toggleMiddleFrame(false)
 	end)
+
+	startShineRotation()
 end
 
 function HUDFrame.showOnlyMiddle()
@@ -158,7 +164,6 @@ function HUDFrame.showMainHUD()
 	mainUI.UpperButtons.Visible = true
 	mainUI.MainFrame.Visible = true
 	mainUI.LeftButtons.Visible = true
-	mainUI.Gems.Visible = true
 	mainUI.SubscriberFrame.Visible = true
 	mainUI.RecordingFrame.Visible = false
 end

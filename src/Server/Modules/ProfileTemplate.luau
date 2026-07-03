@@ -7,7 +7,13 @@ local template = {
 	videoProgress = 0,
 	viewers = 0,
 	subscribers = 1,
-	gems = 0,
+
+	lastVideo = {
+		topic = "",
+		quality = "",
+		viewersGained = 0,
+		subscribersGained = 0,
+	},
 
 	equipment = {
 		laptop = { level = 0, skin = "default" },
@@ -25,7 +31,13 @@ local schema = t.strictInterface({
 	videoProgress = t.number,
 	viewers = t.number,
 	subscribers = t.number,
-	gems = t.number,
+
+	lastVideo = t.strictInterface({
+		topic = t.string,
+		quality = t.string,
+		viewersGained = t.number,
+		subscribersGained = t.number,
+	}),
 
 	equipment = t.strictInterface({
 		laptop = t.strictInterface({

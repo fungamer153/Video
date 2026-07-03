@@ -12,6 +12,7 @@ local HIDDEN_POSITION = UDim2.new(0.5, 0, 1.6, 0)
 
 local frame = nil
 local onTopicSelectedCallback = nil
+local onCloseCallback = nil
 local topicsLoaded = false
 
 local TopicPicker = {}
@@ -59,6 +60,10 @@ function TopicPicker.onStart(topicPickerFrame)
 
 	usePrimaryButton(getCloseButton(), function()
 		TopicPicker.hide()
+
+		if onCloseCallback then
+			onCloseCallback()
+		end
 	end)
 end
 
@@ -84,6 +89,10 @@ end
 
 function TopicPicker.onTopicSelected(callback)
 	onTopicSelectedCallback = callback
+end
+
+function TopicPicker.onClose(callback)
+	onCloseCallback = callback
 end
 
 return TopicPicker

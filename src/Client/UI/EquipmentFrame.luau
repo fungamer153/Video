@@ -97,27 +97,9 @@ local function requestUpgrade(slotName, currency)
 end
 
 local function wireUpgradeButtons(card, slotName, slotData)
-	local gemsCost = EquipmentTypes.getUpgradeCost(slotName, slotData.level, "gems")
 	local viewersCost = EquipmentTypes.getUpgradeCost(slotName, slotData.level, "viewers")
 
-	local gemsButton = card.Gems.TextButton
-	local gemsAction = gemsButton:FindFirstChild("Action")
-	local gemsActionShadow = gemsButton:FindFirstChild("ActionShadow")
-
-	if gemsCost then
-		if gemsAction then
-			gemsAction.Text = tostring(gemsCost)
-		end
-		if gemsActionShadow then
-			gemsActionShadow.Text = tostring(gemsCost)
-		end
-
-		gemsButton.MouseButton1Click:Connect(function()
-			requestUpgrade(slotName, "gems")
-		end)
-	elseif gemsAction then
-		gemsAction.Text = "MAX"
-	end
+	card.Gems.Visible = false
 
 	local viewsButton = card.Views.TextButton
 	local viewsAction = viewsButton:FindFirstChild("Action")
@@ -178,7 +160,8 @@ local function populateCard(card, slotName, slotData)
 		end
 	end
 
-	card.ProgressFrame.Fill.Size = UDim2.new(0, 0, 1, 0)
+	local barProgress = EquipmentTypes.getBarProgress(slotName, slotData.level)
+	card.ProgressFrame.Fill.Size = UDim2.new(barProgress, 0, 1, 0)
 
 	wireUpgradeButtons(card, slotName, slotData)
 end
@@ -262,8 +245,10 @@ local function onEquipmentChanged()
 			pendingUpgradeSlot = nil
 
 			if card then
+				local newProgress = EquipmentTypes.getBarProgress(upgradedSlot, newLevel)
+
 				TweenService:Create(card.ProgressFrame.Fill, FILL_TWEEN, {
-					Size = UDim2.new(1, 0, 1, 0),
+					Size = UDim2.new(newProgress, 0, 1, 0),
 				}):Play()
 
 				task.delay(FILL_TWEEN.Time + FILL_HOLD_TIME, function()

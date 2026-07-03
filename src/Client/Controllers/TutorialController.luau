@@ -2,11 +2,15 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ClientNetwork = require(ReplicatedStorage.Client.Modules.ClientNetwork)
+local tutorialCompleteRemote = ReplicatedStorage:WaitForChild("TutorialComplete")
 local InterfaceController = require(ReplicatedStorage.Client.Controllers.InterfaceController)
 local ChannelNameFrame = require(ReplicatedStorage.Client.UI.ChannelNameFrame)
 local ChannelPreviewFrame = require(ReplicatedStorage.Client.UI.ChannelPreviewFrame)
 local HUDFrame = require(ReplicatedStorage.Client.UI.HUDFrame)
 local PublishHolder = require(ReplicatedStorage.Client.UI.PublishHolder)
+local EquipmentFrame = require(ReplicatedStorage.Client.UI.EquipmentFrame)
+local LiveFrame = require(ReplicatedStorage.Client.UI.LiveFrame)
+local usePrimaryButton = require(ReplicatedStorage.Client.UI.Utility.usePrimaryButton)
 local ClientAtoms = require(ReplicatedStorage.Client.Modules.ClientAtoms)
 
 local TutorialController = {}
@@ -34,6 +38,8 @@ local function showChannelPreview(channelName)
 		InterfaceController.showHUD("HUD")
 		HUDFrame.showOnlyMiddle()
 		stopAtomListeners()
+
+		tutorialCompleteRemote:FireServer()
 	end)
 end
 
@@ -73,6 +79,11 @@ function TutorialController.onStart()
 	local hudUI = playerGui:WaitForChild("HUD")
 	HUDFrame.onStart(hudUI)
 
+	if Players.LocalPlayer:GetAttribute("TutorialAlreadyComplete") then
+		InterfaceController.showHUD("HUD")
+		HUDFrame.showMainHUD()
+	end
+
 	local publishHolderUI = playerGui:WaitForChild("PublishStats"):WaitForChild("PublishHolder")
 	PublishHolder.onStart(publishHolderUI)
 
@@ -84,11 +95,40 @@ function TutorialController.onStart()
 	end)
 
 	ClientNetwork.VideoComplete.on(function(stats)
-		ClientAtoms.viewers(ClientAtoms.viewers() + (stats.viewersGained or 0))
-		ClientAtoms.subscribers(ClientAtoms.subscribers() + (stats.subscribersGained or 0))
-
 		InterfaceController.showScreen("PublishStats")
 		PublishHolder.show(stats)
+	end)
+
+	local equipmentGui = playerGui:WaitForChild("Equipment")
+	EquipmentFrame.onStart(equipmentGui)
+
+	local equipmentButton = hudUI.UpperButtons.Equipment.TextButton
+	usePrimaryButton(equipmentButton, function()
+		InterfaceController.showScreen("Equipment")
+		EquipmentFrame.show()
+	end)
+
+	local equipmentExitButton = equipmentGui.Frame.Header.Exit.TextButton
+	usePrimaryButton(equipmentExitButton, function()
+		EquipmentFrame.hide()
+		InterfaceController.hideScreen()
+		HUDFrame.showMainHUD()
+	end)
+
+	local liveGui = playerGui:WaitForChild("Live")
+	LiveFrame.onStart(liveGui)
+
+	local liveButton = hudUI.UpperButtons.Live.TextButton
+	usePrimaryButton(liveButton, function()
+		InterfaceController.showScreen("Live")
+		LiveFrame.show()
+	end)
+
+	local liveExitButton = liveGui.Frame.Header.Exit.TextButton
+	usePrimaryButton(liveExitButton, function()
+		LiveFrame.hide()
+		InterfaceController.hideScreen()
+		HUDFrame.showMainHUD()
 	end)
 end
 
