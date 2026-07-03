@@ -7,7 +7,7 @@ local EquipmentTypes = require(ReplicatedStorage.Shared.EquipmentTypes)
 local upgradeRequest = ReplicatedStorage:WaitForChild("UpgradeEquipmentRequest")
 local upgradeFailed = ReplicatedStorage:WaitForChild("UpgradeEquipmentFailed")
 
-local VALID_CURRENCIES = { gems = true, viewers = true }
+local VALID_CURRENCIES = { viewers = true }
 
 local EquipmentService = {}
 
@@ -43,11 +43,7 @@ local function onUpgradeRequest(player: Player, slotName: unknown, currency: unk
 		return
 	end
 
-	if currency == "gems" then
-		ProfileService.addGems(player, -cost)
-	else
-		ProfileService.addViewers(player, -cost)
-	end
+	ProfileService.addViewers(player, -cost)
 
 	ProfileService.setEquipmentSlot(player, slotName, {
 		level = slotData.level + 1,

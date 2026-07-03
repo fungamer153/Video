@@ -36,7 +36,7 @@ local function createProfileAtoms(profileData: { [string]: any }): { [string]: a
 		videoProgress = Charm.atom(profileData.videoProgress),
 		viewers = Charm.atom(profileData.viewers),
 		subscribers = Charm.atom(profileData.subscribers),
-		gems = Charm.atom(profileData.gems),
+		lastVideo = Charm.atom(profileData.lastVideo),
 		equipment = Charm.atom(migrateEquipment(profileData.equipment)),
 		channel = Charm.atom(profileData.channel),
 	}
@@ -57,6 +57,8 @@ local function commitField(player, field, value)
 		end
 
 		profileData.equipment = migrateEquipment(profileData.equipment)
+		profileData.gems = nil
+		profileData.lastVideoTopic = nil
 		profileData[field] = value
 		return true
 	end)
@@ -82,16 +84,14 @@ function ProfileService.onStart()
 
 		local atoms = playerAtoms[player]
 		player:SetAttribute("equipment_json", HttpService:JSONEncode(atoms.equipment()))
-		player:SetAttribute("stat_gems", atoms.gems())
 		player:SetAttribute("stat_viewers", atoms.viewers())
 		player:SetAttribute("stat_subscribers", atoms.subscribers())
+		player:SetAttribute("stat_videoProgress", atoms.videoProgress())
+		player:SetAttribute("lastVideo_json", HttpService:JSONEncode(atoms.lastVideo()))
+		player:SetAttribute("stat_channelName", atoms.channel().channelName)
 
 		Charm.subscribe(atoms.equipment, function(newValue)
 			player:SetAttribute("equipment_json", HttpService:JSONEncode(newValue))
-		end)
-
-		Charm.subscribe(atoms.gems, function(newValue)
-			player:SetAttribute("stat_gems", newValue)
 		end)
 
 		Charm.subscribe(atoms.viewers, function(newValue)
@@ -100,6 +100,18 @@ function ProfileService.onStart()
 
 		Charm.subscribe(atoms.subscribers, function(newValue)
 			player:SetAttribute("stat_subscribers", newValue)
+		end)
+
+		Charm.subscribe(atoms.videoProgress, function(newValue)
+			player:SetAttribute("stat_videoProgress", newValue)
+		end)
+
+		Charm.subscribe(atoms.lastVideo, function(newValue)
+			player:SetAttribute("lastVideo_json", HttpService:JSONEncode(newValue))
+		end)
+
+		Charm.subscribe(atoms.channel, function(newValue)
+			player:SetAttribute("stat_channelName", newValue.channelName)
 		end)
 	end)
 
@@ -143,19 +155,26 @@ function ProfileService.setViewers(player: Player, amount: number)
 	commitField(player, "viewers", amount)
 end
 
--- Gems
-function ProfileService.addGems(player: Player, amount: number)
-	local currentGems: number = ProfileService.get(player, "gems")
-	commitField(player, "gems", currentGems + amount)
-end
-
-function ProfileService.setGems(player: Player, amount: number)
-	commitField(player, "gems", amount)
+-- Tutorial
+function ProfileService.setTutorialComplete(player: Player, completed: boolean)
+	commitField(player, "tutorialComplete", completed)
 end
 
 -- Video Progress
 function ProfileService.setVideoProgress(player: Player, progress: number)
 	commitField(player, "videoProgress", progress)
+end
+
+function ProfileService.setLastVideo(
+	player: Player,
+	lastVideoData: {
+		topic: string,
+		quality: string,
+		viewersGained: number,
+		subscribersGained: number,
+	}
+)
+	commitField(player, "lastVideo", lastVideoData)
 end
 
 -- Equipment

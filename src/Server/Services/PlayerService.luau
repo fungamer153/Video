@@ -1,8 +1,12 @@
 local ServerScriptService = game:GetService("ServerScriptService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ServerEvents = require(ServerScriptService.Server.Modules.ServerEvents)
 local ServerNetwork = require(ServerScriptService.Server.Modules.ServerNetwork)
 local DataService = require(ServerScriptService.Server.Services.DataService)
+local ProfileService = require(ServerScriptService.Server.Services.ProfileService)
+
+local tutorialCompleteRemote = ReplicatedStorage:WaitForChild("TutorialComplete")
 
 local PlayerService = {}
 
@@ -18,12 +22,16 @@ local function onPlayerJoined(player: Player)
 		return
 	end
 
-	-- player has completed the tutorial
+	player:SetAttribute("TutorialAlreadyComplete", true)
 end
 
 function PlayerService.onStart()
 	ServerEvents.connect("PlayerJoined", function(extraData: { player: Player })
 		onPlayerJoined(extraData.player)
+	end)
+
+	tutorialCompleteRemote.OnServerEvent:Connect(function(player: Player)
+		ProfileService.setTutorialComplete(player, true)
 	end)
 end
 
