@@ -58,7 +58,7 @@ local function fireVideoComplete(player: Player)
 
 	record.isFinished = true
 	VideoService.activeRecords[player] = nil
-	VideoService.completeVideo(player)
+	VideoService.completeVideo(player, record.topic)
 end
 
 function VideoService.onStart()
@@ -72,6 +72,7 @@ function VideoService.onStart()
 			skippedSeconds = 0,
 			totalDuration = duration,
 			isFinished = false,
+			topic = videoType,
 		}
 
 		return "Success"
@@ -154,12 +155,38 @@ function VideoService.calculateVideoRewards(stats)
 	return viewersGained, subscribersGained
 end
 
-function VideoService.completeVideo(player: Player)
+local function getTopQuality(stats)
+	local topKey = STAT_KEYS[1]
+	local topValue = stats[topKey] or 0
+
+	for _, key in STAT_KEYS do
+		local value = stats[key] or 0
+		if value > topValue then
+			topValue = value
+			topKey = key
+		end
+	end
+
+	return topKey
+end
+
+function VideoService.completeVideo(player: Player, topic: string?)
 	local stats = VideoService.generatePublishStats(player)
 	local viewersGained, subscribersGained = VideoService.calculateVideoRewards(stats)
 
 	ProfileService.addViewers(player, viewersGained)
 	ProfileService.addSubscribers(player, subscribersGained)
+
+	if topic then
+		ProfileService.setLastVideo(player, {
+			topic = topic,
+			quality = getTopQuality(stats),
+			viewersGained = viewersGained,
+			subscribersGained = subscribersGained,
+		})
+	end
+
+	ProfileService.setVideoProgress(player, ProfileService.get(player, "videoProgress") + 1)
 
 	print(
 		player.Name

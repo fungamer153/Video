@@ -8,11 +8,10 @@ EquipmentTypes.definitions = {
 		baseMultiplier = 1,
 		levelMultiplierStep = 0.1,
 		upgradeCost = {
-			gems = 50,
 			viewers = 500,
 		},
 		upgradeCostScale = 1.15,
-		maxLevel = 20,
+		barMaxLevel = 25,
 		skins = {
 			default = {
 				statMultiplier = {
@@ -29,11 +28,10 @@ EquipmentTypes.definitions = {
 		baseMultiplier = 1,
 		levelMultiplierStep = 0.05,
 		upgradeCost = {
-			gems = 30,
 			viewers = 300,
 		},
 		upgradeCostScale = 1.15,
-		maxLevel = 20,
+		barMaxLevel = 25,
 		skins = {
 			default = {
 				statMultiplier = {
@@ -56,10 +54,6 @@ function EquipmentTypes.getUpgradeCost(equipmentId, level, currency)
 		return nil
 	end
 
-	if definition.maxLevel and (level or 0) >= definition.maxLevel then
-		return nil
-	end
-
 	local baseCost = definition.upgradeCost[currency]
 	if not baseCost then
 		return nil
@@ -67,6 +61,12 @@ function EquipmentTypes.getUpgradeCost(equipmentId, level, currency)
 
 	local scale = definition.upgradeCostScale or 1.15
 	return math.floor(baseCost * (scale ^ (level or 0)))
+end
+
+function EquipmentTypes.getBarProgress(equipmentId, level)
+	local definition = EquipmentTypes.definitions[equipmentId]
+	local barMaxLevel = (definition and definition.barMaxLevel) or 25
+	return math.clamp((level or 0) / barMaxLevel, 0, 1)
 end
 
 function EquipmentTypes.getEffectiveStats(equipmentId, level, skin)
