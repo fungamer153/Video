@@ -3,9 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ProfileService = require(ServerScriptService.Server.Services.ProfileService)
 local EquipmentTypes = require(ReplicatedStorage.Shared.EquipmentTypes)
-
-local upgradeRequest = ReplicatedStorage:WaitForChild("UpgradeEquipmentRequest")
-local upgradeFailed = ReplicatedStorage:WaitForChild("UpgradeEquipmentFailed")
+local S = require(game:GetService("ReplicatedFirst").Services.Internal.Shortcuts)
 
 local VALID_CURRENCIES = { viewers = true }
 
@@ -33,13 +31,13 @@ local function onUpgradeRequest(player: Player, slotName: unknown, currency: unk
 
 	local cost = EquipmentTypes.getUpgradeCost(slotName, slotData.level, currency)
 	if not cost then
-		upgradeFailed:FireClient(player, slotName, "Max level reached")
+		S.RemoteEvent("UpgradeEquipmentFailed"):Fire(player, slotName, "Max level reached")
 		return
 	end
 
 	local currentAmount: number = ProfileService.get(player, currency)
 	if currentAmount < cost then
-		upgradeFailed:FireClient(player, slotName, "Not enough " .. currency)
+		S.RemoteEvent("UpgradeEquipmentFailed"):Fire(player, slotName, "Not enough " .. currency)
 		return
 	end
 
@@ -48,11 +46,15 @@ local function onUpgradeRequest(player: Player, slotName: unknown, currency: unk
 	ProfileService.setEquipmentSlot(player, slotName, {
 		level = slotData.level + 1,
 		skin = slotData.skin,
+		placed = slotData.placed,
+		gridX = slotData.gridX,
+		gridZ = slotData.gridZ,
+		rotation = slotData.rotation,
 	})
 end
 
 function EquipmentService.onStart()
-	upgradeRequest.OnServerEvent:Connect(onUpgradeRequest)
+	S.RemoteEvent("UpgradeEquipmentRequest"):CallBack(onUpgradeRequest)
 end
 
 return EquipmentService

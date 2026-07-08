@@ -2,11 +2,9 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ServerEvents = require(ServerScriptService.Server.Modules.ServerEvents)
-local ServerNetwork = require(ServerScriptService.Server.Modules.ServerNetwork)
+local S = require(game:GetService("ReplicatedFirst").Services.Internal.Shortcuts)
 local DataService = require(ServerScriptService.Server.Services.DataService)
 local ProfileService = require(ServerScriptService.Server.Services.ProfileService)
-
-local tutorialCompleteRemote = ReplicatedStorage:WaitForChild("TutorialComplete")
 
 local PlayerService = {}
 
@@ -18,7 +16,7 @@ local function onPlayerJoined(player: Player)
 	end
 
 	if not profileData.tutorialComplete then
-		ServerNetwork.StartTutorial.fire(player)
+		S.RemoteEvent("StartTutorial"):Fire(player)
 		return
 	end
 
@@ -30,7 +28,7 @@ function PlayerService.onStart()
 		onPlayerJoined(extraData.player)
 	end)
 
-	tutorialCompleteRemote.OnServerEvent:Connect(function(player: Player)
+	S.RemoteEvent("TutorialComplete"):CallBack(function(player: Player)
 		ProfileService.setTutorialComplete(player, true)
 	end)
 end

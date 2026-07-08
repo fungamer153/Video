@@ -4,9 +4,7 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local EquipmentTypes = require(ReplicatedStorage.Shared.EquipmentTypes)
-
-local upgradeRequest = ReplicatedStorage:WaitForChild("UpgradeEquipmentRequest")
-local upgradeFailed = ReplicatedStorage:WaitForChild("UpgradeEquipmentFailed")
+local S = require(game:GetService("ReplicatedFirst").Services.Internal.Shortcuts)
 
 local SHOW_TWEEN = TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 local HIDE_TWEEN = TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
@@ -17,7 +15,7 @@ local FILL_HOLD_TIME = 0.3
 local HIDDEN_POSITION = UDim2.new(0.5, 0, 1.3, 0)
 local SHOWN_POSITION = UDim2.new(0.5, 0, 0.5, 0)
 
-local SLOT_ORDER = { "laptop", "desk" }
+local SLOT_ORDER = { "laptopDesk", "desktop", "chair", "gamingChair" }
 
 local EquipmentFrame = {}
 
@@ -93,7 +91,7 @@ local function requestUpgrade(slotName, currency)
 	end
 
 	pendingUpgradeSlot = slotName
-	upgradeRequest:FireServer(slotName, currency)
+	S.RemoteEvent("UpgradeEquipmentRequest"):Fire(slotName, currency)
 end
 
 local function wireUpgradeButtons(card, slotName, slotData)
@@ -341,7 +339,7 @@ function EquipmentFrame.onStart(equipmentGui)
 		end
 	end)
 
-	upgradeFailed.OnClientEvent:Connect(function(slotName, reason)
+	S.RemoteEvent("UpgradeEquipmentFailed"):CallBack(function(slotName, reason)
 		if pendingUpgradeSlot == slotName then
 			pendingUpgradeSlot = nil
 		end

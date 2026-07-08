@@ -25,27 +25,38 @@ end
 
 function Loader.SpawnAll(modules: { [string]: any }, methodName: string)
 	local threads = {}
+	local threadNames = {}
 
 	for name, obj in modules do
+		local callable = nil
+
 		if typeof(obj) == "function" then
-			table.insert(
-				threads,
-				coroutine.create(function()
-					obj()
-				end)
-			)
+			callable = obj
 		elseif typeof(obj) == "table" and obj[methodName] and typeof(obj[methodName]) == "function" then
-			table.insert(
-				threads,
-				coroutine.create(function()
-					obj[methodName]()
-				end)
-			)
+			callable = function()
+				obj[methodName]()
+			end
+		end
+
+		if callable then
+			local thread = coroutine.create(callable)
+			table.insert(threads, thread)
+			threadNames[thread] = name
 		end
 	end
 
-	for _, thread in pairs(threads) do
-		coroutine.resume(thread)
+	for _, thread in ipairs(threads) do
+		local ok, err = coroutine.resume(thread)
+		if not ok then
+			warn(
+				string.format(
+					"[Loader] %s.%s threw an error: %s",
+					tostring(threadNames[thread]),
+					methodName,
+					tostring(err)
+				)
+			)
+		end
 	end
 
 	return threads

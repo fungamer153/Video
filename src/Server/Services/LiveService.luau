@@ -2,8 +2,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ProfileService = require(ServerScriptService.Server.Services.ProfileService)
-
-local liveBarFilled = ReplicatedStorage:WaitForChild("LiveBarFilled")
+local S = require(game:GetService("ReplicatedFirst").Services.Internal.Shortcuts)
 
 local MIN_VIEWERS_REWARD = 30
 local MAX_VIEWERS_REWARD = 80
@@ -26,7 +25,7 @@ local function onBarFilled(player: Player)
 end
 
 function LiveService.onStart()
-	liveBarFilled.OnServerEvent:Connect(onBarFilled)
+	S.RemoteEvent("LiveBarFilled"):CallBack(onBarFilled)
 
 	game.Players.PlayerRemoving:Connect(function(player)
 		lastRewardTime[player] = nil

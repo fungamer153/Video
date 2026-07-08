@@ -2,7 +2,7 @@ local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
-local ClientNetwork = require(game:GetService("ReplicatedStorage").Client.Modules.ClientNetwork)
+local S = require(game:GetService("ReplicatedFirst").Services.Internal.Shortcuts)
 
 local SHOW_TWEEN = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 local HIDE_TWEEN = TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
@@ -85,7 +85,7 @@ function RecordingFrame.onStart(recordingFrame)
 	recordingFrame.Visible = true
 	frame.Visible = false
 
-	ClientNetwork.StartTutorial.on(function()
+	S.RemoteEvent("StartTutorial"):CallBack(function()
 		attemptFinishVideo()
 	end)
 end
@@ -162,7 +162,7 @@ function RecordingFrame.registerClicks()
 			elapsedProgressSeconds = math.clamp(elapsedProgressSeconds + 1, 0, totalDuration)
 			updateTimeLeftText(totalDuration - elapsedProgressSeconds)
 
-			ClientNetwork.IncrementProgress.fire()
+			S.RemoteEvent("IncrementProgress"):Fire()
 
 			local progressPercentage = math.clamp(elapsedProgressSeconds / totalDuration, 0.01, 0.999)
 			targetVisualProgress = progressPercentage

@@ -2,7 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
-local ClientNetwork = require(ReplicatedStorage.Client.Modules.ClientNetwork)
+local S = require(game:GetService("ReplicatedFirst").Services.Internal.Shortcuts)
 local ClientAtoms = require(ReplicatedStorage.Client.Modules.ClientAtoms)
 local Charm = require(ReplicatedStorage.Packages.Charm)
 local InterfaceController = require(ReplicatedStorage.Client.Controllers.InterfaceController)
@@ -113,7 +113,7 @@ function HUDFrame.onStart(hudUI)
 	end)
 
 	TopicPicker.onTopicSelected(function(topicName)
-		local succ = ClientNetwork.StartVideo.call(topicName)
+		local succ = S.RemoteFunction("StartVideo"):Invoke(topicName)
 
 		if succ == "Success" then
 			TopicPicker.hide()

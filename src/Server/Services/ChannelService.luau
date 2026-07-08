@@ -1,7 +1,7 @@
 local TextService = game:GetService("TextService")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local ServerNetwork = require(ServerScriptService.Server.Modules.ServerNetwork)
+local S = require(game:GetService("ReplicatedFirst").Services.Internal.Shortcuts)
 local ProfileService = require(ServerScriptService.Server.Services.ProfileService)
 
 local ChannelService = {
@@ -33,7 +33,7 @@ function ChannelService.getVideoCount()
 end
 
 function ChannelService.onStart()
-	ServerNetwork.ChangeChannelName.setCallback(function(player, text)
+	S.RemoteFunction("ChangeChannelName"):CallBack(function(player, text)
 		local filteredText = filterText(text, player.UserId)
 
 		if not filteredText then

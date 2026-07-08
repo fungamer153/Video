@@ -1,8 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local ClientNetwork = require(ReplicatedStorage.Client.Modules.ClientNetwork)
-local tutorialCompleteRemote = ReplicatedStorage:WaitForChild("TutorialComplete")
+local S = require(game:GetService("ReplicatedFirst").Services.Internal.Shortcuts)
 local InterfaceController = require(ReplicatedStorage.Client.Controllers.InterfaceController)
 local ChannelNameFrame = require(ReplicatedStorage.Client.UI.ChannelNameFrame)
 local ChannelPreviewFrame = require(ReplicatedStorage.Client.UI.ChannelPreviewFrame)
@@ -10,6 +9,7 @@ local HUDFrame = require(ReplicatedStorage.Client.UI.HUDFrame)
 local PublishHolder = require(ReplicatedStorage.Client.UI.PublishHolder)
 local EquipmentFrame = require(ReplicatedStorage.Client.UI.EquipmentFrame)
 local LiveFrame = require(ReplicatedStorage.Client.UI.LiveFrame)
+local BuildUI = require(ReplicatedStorage.Client.UI.BuildUI)
 local usePrimaryButton = require(ReplicatedStorage.Client.UI.Utility.usePrimaryButton)
 local ClientAtoms = require(ReplicatedStorage.Client.Modules.ClientAtoms)
 
@@ -39,7 +39,7 @@ local function showChannelPreview(channelName)
 		HUDFrame.showOnlyMiddle()
 		stopAtomListeners()
 
-		tutorialCompleteRemote:FireServer()
+		S.RemoteEvent("TutorialComplete"):Fire()
 	end)
 end
 
@@ -47,7 +47,7 @@ local function startTutorial()
 	InterfaceController.showScreen("ChannelName")
 
 	ChannelNameFrame.onConfirm(function(channelName)
-		local result = ClientNetwork.ChangeChannelName.call(channelName)
+		local result = S.RemoteFunction("ChangeChannelName"):Invoke(channelName)
 
 		if result ~= "Success" then
 			return
@@ -72,7 +72,7 @@ function TutorialController.onStart()
 		task.wait()
 	end
 
-	ClientNetwork.StartTutorial.on(function()
+	S.RemoteEvent("StartTutorial"):CallBack(function()
 		startTutorial()
 	end)
 
@@ -94,7 +94,7 @@ function TutorialController.onStart()
 		end)
 	end)
 
-	ClientNetwork.VideoComplete.on(function(stats)
+	S.RemoteEvent("VideoComplete"):CallBack(function(stats)
 		InterfaceController.showScreen("PublishStats")
 		PublishHolder.show(stats)
 	end)
@@ -129,6 +129,37 @@ function TutorialController.onStart()
 		LiveFrame.hide()
 		InterfaceController.hideScreen()
 		HUDFrame.showMainHUD()
+	end)
+
+	local buildUiGui = playerGui:WaitForChild("BuildUI")
+	BuildUI.onStart(buildUiGui)
+
+	local buildExitOk, buildExitButton = pcall(function()
+		return buildUiGui.hotbar.Close.Exit.TextButton
+	end)
+	if buildExitOk and buildExitButton then
+		usePrimaryButton(buildExitButton, function()
+			BuildUI.hide()
+			InterfaceController.hideScreen()
+			HUDFrame.showMainHUD()
+		end)
+	else
+		warn(
+			"[TutorialController] Could not find BuildUI exit button at hotbar.Close.Exit.TextButton: "
+				.. tostring(buildExitButton)
+		)
+	end
+
+	local editModeButton = hudUI.LeftButtons.EditMode.TextButton
+	usePrimaryButton(editModeButton, function()
+		if InterfaceController.getCurrentScreen() == "BuildUI" then
+			BuildUI.hide()
+			InterfaceController.hideScreen()
+			HUDFrame.showMainHUD()
+		else
+			InterfaceController.showScreen("BuildUI")
+			BuildUI.show()
+		end
 	end)
 end
 

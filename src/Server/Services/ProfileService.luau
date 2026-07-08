@@ -21,9 +21,49 @@ local function migrateEquipment(equipmentData: any): { [string]: any }
 			and typeof(currentSlot.level) == "number"
 			and typeof(currentSlot.skin) == "string"
 		then
-			migrated[slotName] = currentSlot
+			migrated[slotName] = {
+				level = currentSlot.level,
+				skin = currentSlot.skin,
+				placed = if typeof(currentSlot.placed) == "boolean" then currentSlot.placed else defaultSlot.placed,
+				gridX = if typeof(currentSlot.gridX) == "number" then currentSlot.gridX else defaultSlot.gridX,
+				gridZ = if typeof(currentSlot.gridZ) == "number" then currentSlot.gridZ else defaultSlot.gridZ,
+				rotation = if typeof(currentSlot.rotation) == "number"
+					then currentSlot.rotation
+					else defaultSlot.rotation,
+			}
 		else
 			migrated[slotName] = table.clone(defaultSlot)
+		end
+	end
+
+	return migrated
+end
+
+local function migratePlot(
+	plotData: any
+): { unlockedOverrides: { [string]: boolean }, floorOverrides: { [string]: string } }
+	local migrated = {
+		unlockedOverrides = {},
+		floorOverrides = {},
+	}
+
+	if typeof(plotData) ~= "table" then
+		return migrated
+	end
+
+	if typeof(plotData.unlockedOverrides) == "table" then
+		for cellKey, value in plotData.unlockedOverrides do
+			if typeof(cellKey) == "string" and value == true then
+				migrated.unlockedOverrides[cellKey] = true
+			end
+		end
+	end
+
+	if typeof(plotData.floorOverrides) == "table" then
+		for cellKey, chunkTypeId in plotData.floorOverrides do
+			if typeof(cellKey) == "string" and typeof(chunkTypeId) == "string" then
+				migrated.floorOverrides[cellKey] = chunkTypeId
+			end
 		end
 	end
 
@@ -39,6 +79,7 @@ local function createProfileAtoms(profileData: { [string]: any }): { [string]: a
 		lastVideo = Charm.atom(profileData.lastVideo),
 		equipment = Charm.atom(migrateEquipment(profileData.equipment)),
 		channel = Charm.atom(profileData.channel),
+		plot = Charm.atom(migratePlot(profileData.plot)),
 	}
 end
 
@@ -57,6 +98,7 @@ local function commitField(player, field, value)
 		end
 
 		profileData.equipment = migrateEquipment(profileData.equipment)
+		profileData.plot = migratePlot(profileData.plot)
 		profileData.gems = nil
 		profileData.lastVideoTopic = nil
 		profileData[field] = value
@@ -84,6 +126,7 @@ function ProfileService.onStart()
 
 		local atoms = playerAtoms[player]
 		player:SetAttribute("equipment_json", HttpService:JSONEncode(atoms.equipment()))
+		player:SetAttribute("plot_json", HttpService:JSONEncode(atoms.plot()))
 		player:SetAttribute("stat_viewers", atoms.viewers())
 		player:SetAttribute("stat_subscribers", atoms.subscribers())
 		player:SetAttribute("stat_videoProgress", atoms.videoProgress())
@@ -92,6 +135,10 @@ function ProfileService.onStart()
 
 		Charm.subscribe(atoms.equipment, function(newValue)
 			player:SetAttribute("equipment_json", HttpService:JSONEncode(newValue))
+		end)
+
+		Charm.subscribe(atoms.plot, function(newValue)
+			player:SetAttribute("plot_json", HttpService:JSONEncode(newValue))
 		end)
 
 		Charm.subscribe(atoms.viewers, function(newValue)
@@ -189,6 +236,46 @@ function ProfileService.setEquipmentSlot(player: Player, slotName: string, slotD
 	local updatedEquipment = table.clone(currentEquipment)
 	updatedEquipment[slotName] = slotData
 	commitField(player, "equipment", updatedEquipment)
+end
+
+function ProfileService.setEquipmentPlacement(
+	player: Player,
+	slotName: string,
+	placement: { placed: boolean, gridX: number, gridZ: number, rotation: number }
+)
+	local currentEquipment = ProfileService.get(player, "equipment")
+	local currentSlot = currentEquipment[slotName]
+	if not currentSlot then
+		return
+	end
+
+	local updatedEquipment = table.clone(currentEquipment)
+	updatedEquipment[slotName] = {
+		level = currentSlot.level,
+		skin = currentSlot.skin,
+		placed = placement.placed,
+		gridX = placement.gridX,
+		gridZ = placement.gridZ,
+		rotation = placement.rotation,
+	}
+	commitField(player, "equipment", updatedEquipment)
+end
+
+-- Plot chunks
+function ProfileService.setChunkUnlocked(player: Player, cellKey: string)
+	local currentPlot = ProfileService.get(player, "plot")
+	local updatedPlot = table.clone(currentPlot)
+	updatedPlot.unlockedOverrides = table.clone(currentPlot.unlockedOverrides)
+	updatedPlot.unlockedOverrides[cellKey] = true
+	commitField(player, "plot", updatedPlot)
+end
+
+function ProfileService.setChunkFloor(player: Player, cellKey: string, chunkTypeId: string)
+	local currentPlot = ProfileService.get(player, "plot")
+	local updatedPlot = table.clone(currentPlot)
+	updatedPlot.floorOverrides = table.clone(currentPlot.floorOverrides)
+	updatedPlot.floorOverrides[cellKey] = chunkTypeId
+	commitField(player, "plot", updatedPlot)
 end
 
 -- Channel

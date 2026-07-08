@@ -6,8 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LiveComments = require(ReplicatedStorage.Shared.LiveComments)
 local usePrimaryButton = require(ReplicatedStorage.Client.UI.Utility.usePrimaryButton)
-
-local liveBarFilled = ReplicatedStorage:WaitForChild("LiveBarFilled")
+local S = require(game:GetService("ReplicatedFirst").Services.Internal.Shortcuts)
 
 local SHOW_TWEEN = TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 local HIDE_TWEEN = TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
@@ -271,7 +270,7 @@ local function arrivalLoop(mySessionId)
 end
 
 local function onFillComplete()
-	liveBarFilled:FireServer()
+	S.RemoteEvent("LiveBarFilled"):Fire()
 	setBar(0)
 end
 
